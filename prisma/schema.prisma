@@ -1,0 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url = env("DATABASE_URL")
+}
+
+model Artist {
+  id String @id @default(cuid())
+  name String
+  email String?
+  phone String?
+  homeCity String?
+  homeState String?
+  bio String?
+  website String?
+  travelRadiusMiles Int?
+  ownsPA Boolean @default(false)
+  typicalGuaranteeCents Int?
+  notes String?
+  opportunities Opportunity[]
+  bookings Booking[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Venue {
+  id String @id @default(cuid())
+  name String
+  address String?
+  city String?
+  state String?
+  zip String?
+  website String?
+  phone String?
+  venueType String
+  musicStyleTags String?
+  soloAcousticSuitability Int?
+  typicalShowSchedule String?
+  paProvided Boolean?
+  indoorOutdoor String?
+  parkingNotes String?
+  loadInNotes String?
+  relationshipStatus String @default("COLD_LEAD")
+  lastContactDate DateTime?
+  lastPerformanceDate DateTime?
+  timesPerformed Int @default(0)
+  discoveredVia String?
+  sourceUrl String?
+  notes String?
+  contacts Contact[]
+  opportunities Opportunity[]
+  bookings Booking[]
+  conversations Conversation[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contact {
+  id String @id @default(cuid())
+  venueId String
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  name String
+  role String?
+  email String?
+  phone String?
+  preferredChannel String?
+  notes String?
+  opportunities Opportunity[]
+  bookings Booking[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Opportunity {
+  id String @id @default(cuid())
+  venueId String
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  contactId String?
+  contact Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  artistId String
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  status String @default("LEAD")
+  priorityScore Int?
+  scoreReasons String?
+  sourceType String
+  discoveredAt DateTime @default(now())
+  proposedDates String?
+  notes String?
+  conversations Conversation[]
+  booking Booking?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Conversation {
+  id String @id @default(cuid())
+  opportunityId String
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  venueId String
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  channel String
+  externalThreadId String?
+  lastMessageAt DateTime?
+  needsReply Boolean @default(false)
+  messages Message[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id String @id @default(cuid())
+  conversationId String
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction String
+  channel String
+  subject String?
+  body String
+  draftStatus String @default("draft")
+  createdAt DateTime @default(now())
+  sentAt DateTime?
+}
+
+model Booking {
+  id String @id @default(cuid())
+  opportunityId String @unique
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  artistId String
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  venueId String
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  contactId String?
+  contact Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  status String
+  performanceDate DateTime?
+  arrivalTime DateTime?
+  loadInTime DateTime?
+  setupTime DateTime?
+  soundcheckTime DateTime?
+  showStart DateTime?
+  showEnd DateTime?
+  loadOutTime DateTime?
+  setStructure String?
+  paymentAmountCents Int?
+  paymentMethod String?
+  paymentTiming String?
+  guaranteeCents Int?
+  tipsAllowed Boolean?
+  merchAllowed Boolean?
+  indoorOutdoor String?
+  paProvided Boolean?
+  performerProvidesPA Boolean?
+  stageInfo String?
+  powerInfo String?
+  parkingInfo String?
+  loadingInstructions String?
+  venueAddressSnapshot String?
+  contactPhoneSnapshot String?
+  specialRequests String?
+  dressCode String?
+  contractUrl String?
+  notes String?
+  calendarEvents CalendarEvent[]
+  payments Payment[]
+  tasks Task[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CalendarEvent {
+  id String @id @default(cuid())
+  bookingId String?
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  googleEventId String? @unique
+  googleCalendarId String?
+  syncStatus String @default("local_only")
+  startsAt DateTime
+  endsAt DateTime?
+  kind String
+  title String
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id String @id @default(cuid())
+  bookingId String
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amountCents Int
+  method String?
+  status String @default("pending")
+  dueDate DateTime?
+  paidAt DateTime?
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Task {
+  id String @id @default(cuid())
+  relatedType String
+  relatedId String
+  bookingId String?
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  title String
+  dueAt DateTime?
+  status String @default("open")
+  kind String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Asset {
+  id String @id @default(cuid())
+  type String
+  url String
+  title String?
+  tags String?
+  createdAt DateTime @default(now())
+}
+
+model Integration {
+  id String @id @default(cuid())
+  provider String @unique
+  status String @default("not_configured")
+  config String?
+  lastSyncAt DateTime?
+}

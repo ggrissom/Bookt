@@ -1,0 +1,7 @@
+export const RELATIONSHIP_STATUSES = ["COLD_LEAD", "KNOWN_CONTACT", "PAST_VENUE", "REPEAT_VENUE", "ACTIVE_BOOKING", "RECENTLY_CONTACTED", "FOLLOW_UP_REQUIRED", "DO_NOT_CONTACT"] as const;
+export const DEAL_STATUSES = ["LEAD", "RESEARCHING", "READY_FOR_OUTREACH", "CONTACTED", "WAITING_FOR_REPLY", "INTERESTED", "QUALIFYING", "DATE_PROPOSED", "TENTATIVE", "CONFIRMED", "UPCOMING", "PERFORMED", "PAYMENT_PENDING", "PAID", "FOLLOW_UP", "REPEAT_OPPORTUNITY", "DECLINED", "NO_RESPONSE", "CANCELLED_BY_VENUE", "CANCELLED_BY_ARTIST", "RESCHEDULE_NEEDED", "DO_NOT_CONTACT"] as const;
+export type DealStatus = (typeof DEAL_STATUSES)[number];
+export type RelationshipStatus = (typeof RELATIONSHIP_STATUSES)[number];
+export const BOOKING_TRIGGER_STATUSES = new Set<DealStatus>(["DATE_PROPOSED", "TENTATIVE", "CONFIRMED", "UPCOMING", "PERFORMED", "PAYMENT_PENDING", "PAID", "FOLLOW_UP", "REPEAT_OPPORTUNITY"]);
+export const BOOKING_ADVANCE_STATUSES = new Set<DealStatus>(["TENTATIVE", "CONFIRMED"]);
+export function label(value: string): string { return value.toLowerCase().split("_").map((word) => word[0].toUpperCase() + word.slice(1)).join(" "); }
