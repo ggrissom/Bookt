@@ -7,7 +7,7 @@ This V1 is a clean rebuild from product requirements. It intentionally does **no
 ## Architecture
 
 - **Next.js 15 App Router + TypeScript + Tailwind CSS** for the responsive, server-rendered application.
-- **Prisma + SQLite** for lightweight single-tenant V1 persistence. IDs use `cuid()` and fields are portable to Postgres later.
+- **Prisma + PostgreSQL** for single-tenant persistence. IDs use `cuid()`.
 - **Single-admin HMAC cookie session** for the Bookt administrator. Routes other than `/login` and `/api/health` are protected.
 - **Server actions** enforce lifecycle transitions, including no auto-send path for outreach messages.
 - **Integration boundaries** live under `lib/integrations/`; Google Calendar is intentionally a no-op stub until credentials and OAuth are introduced.
@@ -16,7 +16,7 @@ This V1 is a clean rebuild from product requirements. It intentionally does **no
 
 The model covers the artist, venues and their relationship status, venue contacts, opportunities and priority explanations, conversations/messages, one operational booking per opportunity, local calendar events, payments, actionable tasks, promotional assets, and integration readiness records.
 
-SQLite does not support Prisma enums. The V1 schema stores the specified enum-like lifecycle values as `String` fields and validates them via typed `lib/constants.ts` values. This preserves a simple SQLite setup and a direct migration path to native Postgres enums later.
+The schema stores enum-like lifecycle values as `String` fields (not native Postgres enums) and validates them via typed `lib/constants.ts` values, which keeps status lists editable without a migration and leaves a direct path to native enums later if needed.
 
 ### Booking safeguards
 
@@ -29,8 +29,8 @@ SQLite does not support Prisma enums. The V1 schema stores the specified enum-li
 
 - `/login` — single-admin sign-in.
 - `/` — booking attention dashboard.
-- `/venues`, `/venues/[id]` — relationship-aware venue directory and detail.
-- `/opportunities`, `/opportunities/[id]` — scored pipeline, conversation, outreach review, and conflict gate.
+- `/venues`, `/venues/[id]`, `/venues/new` — relationship-aware venue directory, detail, and intake form (with an optional first contact).
+- `/opportunities`, `/opportunities/[id]`, `/opportunities/new` — scored pipeline, conversation, outreach review, conflict gate, and manual opportunity intake.
 - `/bookings`, `/bookings/[id]` — upcoming/past performance list and full logistics, payment, task record.
 - `/calendar` — local event agenda and honest Google Calendar status.
 - `/tasks` — cross-workflow follow-ups and reminders.
@@ -38,10 +38,10 @@ SQLite does not support Prisma enums. The V1 schema stores the specified enum-li
 
 ## Setup
 
-Prerequisites: Node.js 20+ and npm.
+Prerequisites: Node.js 20+, npm, and a running PostgreSQL instance (local or hosted).
 
 ```bash
-cp .env.example .env
+cp .env.example .env   # then set DATABASE_URL to your Postgres connection string
 npm install
 npx prisma db push
 npm run db:seed
@@ -60,7 +60,7 @@ npm run db:generate
 
 ## Environment
 
-`.env.example` contains placeholders only for `DATABASE_URL`, admin credentials and session secret, Google Calendar service-account values, and an OpenAI key. Do not commit a real `.env` file or credentials.
+`.env.example` contains placeholders only for `DATABASE_URL` (PostgreSQL), admin credentials and session secret, Google Calendar service-account values, and an OpenAI key. Do not commit a real `.env` file or credentials.
 
 ## Roadmap
 
