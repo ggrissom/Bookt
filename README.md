@@ -7,7 +7,7 @@ This V1 is a clean rebuild from product requirements. It intentionally does **no
 ## Architecture
 
 - **Next.js 15 App Router + TypeScript + Tailwind CSS** for the responsive, server-rendered application.
-- **Prisma + SQLite** for lightweight single-tenant V1 persistence. IDs use `cuid()` and fields are portable to Postgres later.
+- **Prisma + PostgreSQL** for persistent V1 storage that can run locally and on Vercel. IDs use `cuid()`.
 - **Single-admin HMAC cookie session** for the Bookt administrator. Routes other than `/login` and `/api/health` are protected.
 - **Server actions** enforce lifecycle transitions, including no auto-send path for outreach messages.
 - **Integration boundaries** live under `lib/integrations/`; Google Calendar is intentionally a no-op stub until credentials and OAuth are introduced.
@@ -16,7 +16,7 @@ This V1 is a clean rebuild from product requirements. It intentionally does **no
 
 The model covers the artist, venues and their relationship status, venue contacts, opportunities and priority explanations, conversations/messages, one operational booking per opportunity, local calendar events, payments, actionable tasks, promotional assets, and integration readiness records.
 
-SQLite does not support Prisma enums. The V1 schema stores the specified enum-like lifecycle values as `String` fields and validates them via typed `lib/constants.ts` values. This preserves a simple SQLite setup and a direct migration path to native Postgres enums later.
+The V1 schema stores the specified enum-like lifecycle values as `String` fields and validates them via typed `lib/constants.ts` values. This keeps the schema flexible while the workflow is still evolving.
 
 ### Booking safeguards
 
@@ -38,12 +38,12 @@ SQLite does not support Prisma enums. The V1 schema stores the specified enum-li
 
 ## Setup
 
-Prerequisites: Node.js 20+ and npm.
+Prerequisites: Node.js 20+, npm, and a PostgreSQL database.
 
 ```bash
 cp .env.example .env
 npm install
-npx prisma db push
+npm run db:push
 npm run db:seed
 npm run dev
 ```
@@ -53,6 +53,7 @@ Open `http://localhost:3000`. The seeded data is conspicuously fictional (`[Samp
 Useful commands:
 
 ```bash
+npm run lint
 npm run test
 npm run build
 npm run db:generate
@@ -61,6 +62,19 @@ npm run db:generate
 ## Environment
 
 `.env.example` contains placeholders only for `DATABASE_URL`, admin credentials and session secret, Google Calendar service-account values, and an OpenAI key. Do not commit a real `.env` file or credentials.
+
+## Vercel deployment
+
+Bookt is now configured for a managed PostgreSQL deployment instead of a local SQLite file, which makes it suitable for Vercel hosting.
+
+Before deploying:
+
+1. Provision a PostgreSQL database (Vercel Postgres, Neon, Supabase, or another managed provider).
+2. Set `DATABASE_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_SECRET` in the Vercel project.
+3. Run `npm run db:push` against that database before the first production use.
+4. Only run `npm run db:seed` if you explicitly want the fictional sample records in that environment.
+
+The app builds on Vercel with `npm run build`, and Prisma Client is generated automatically during install via `postinstall`.
 
 ## Roadmap
 
